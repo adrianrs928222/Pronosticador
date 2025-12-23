@@ -1,1 +1,56 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dashboard futbol europeo</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+<h1>predicciones futbol europeo</h1>
+
+<div class="calendar-filters">
+<label for="league-select">liga:</label>
+<select id="league-select">
+<option value="all">todas</option>
+<option value="140">laliga</option>
+<option value="39">premier league</option>
+<option value="135">serie a</option>
+<option value="78">bundesliga</option>
+<option value="61">ligue 1</option>
+</select>
+</div>
+
+<table id="matches-table">
+<thead>
+<tr>
+<th>fecha</th>
+<th>partido</th>
+<th>prob home</th>
+<th>prob draw</th>
+<th>prob away</th>
+<th>odds home</th>
+<th>odds draw</th>
+<th>odds away</th>
+<th>ev home</th>
+<th>ev draw</th>
+<th>ev away</th>
+<th>btts</th>
+<th>más/menos 2.5</th>
+<th>más/menos 1.5</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<canvas id="ev-chart" height="200"></canvas>
+</div>
+
+<div id="prediction-modal"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
