@@ -6,10 +6,9 @@ app.use(cors()); app.use(express.json());
 
 const API_KEY = process.env.API_FOOTBALL_KEY; const BASE_URL = 'https://v3.football.api-sports.io';
 
-// Obtener partidos de hoy con predicción de ambos anotan app.get('/matches/today', async (req, res) => { try { const response = await axios.get(${BASE_URL}/fixtures?date=${new Date().toISOString().split('T')[0]}, { headers: { 'x-apisports-key': API_KEY } }); const matches = response.data.response;
+// Obtener partidos de hoy con predicciones reales app.get('/matches/today', async (req, res) => { try { const response = await axios.get(${BASE_URL}/fixtures?date=${new Date().toISOString().split('T')[0]}, { headers: { 'x-apisports-key': API_KEY } }); const matches = response.data.response;
 
-// Para cada partido calculamos Ambos Anotan basado en estadísticas reales
-    const resultado = await Promise.all(matches.map(async match => {
+const resultado = await Promise.all(matches.map(async match => {
         const homeId = match.teams.home.id;
         const awayId = match.teams.away.id;
 
@@ -21,12 +20,17 @@ const API_KEY = process.env.API_FOOTBALL_KEY; const BASE_URL = 'https://v3.footb
         const homeGoals = homeStatsRes.data.response.goals.for.minute['total']?.average || 1;
         const awayGoals = awayStatsRes.data.response.goals.for.minute['total']?.average || 1;
 
+        // Predicción Ambos anotan
         const probHome = homeGoals / 3;
         const probAway = awayGoals / 3;
-
         const ambosAnotan = (probHome * probAway) > 0.5 ? 'Sí' : 'No';
 
-        return { ...match, ambosAnotan };
+        // Predicción +1.5 y +2.5 goles
+        const golesEsperados = homeGoals + awayGoals;
+        const mas15 = golesEsperados > 1.5 ? 'Sí' : 'No';
+        const mas25 = golesEsperados > 2.5 ? 'Sí' : 'No';
+
+        return { ...match, ambosAnotan, mas15, mas25 };
     }));
 
     res.json(resultado);
@@ -53,6 +57,8 @@ data.forEach(match => {
     const local = match.teams.home.name;
     const visitante = match.teams.away.name;
     const ambos = match.ambosAnotan;
+    const mas15 = match.mas15;
+    const mas25 = match.mas25;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -61,6 +67,8 @@ data.forEach(match => {
         <td data-label="Local">${local}</td>
         <td data-label="Visitante">${visitante}</td>
         <td data-label="Ambos anotan">${ambos}</td>
+        <td data-label="+1.5 goles">${mas15}</td>
+        <td data-label="+2.5 goles">${mas25}</td>
     `;
 
     tr.addEventListener('click', () => mostrarModal(match));
@@ -73,7 +81,7 @@ ligaSelect.innerHTML = '<option value="">Todas las ligas</option>' + Array.from(
 
 }
 
-function mostrarModal(match){ detalleP.innerHTML = <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br> Liga: ${match.league.name}<br> Fecha: ${match.fixture.date}<br> Estadio: ${match.fixture.venue.name || 'N/A'}<br> Ciudad: ${match.fixture.venue.city || 'N/A'}<br> Ambos anotan: ${match.ambosAnotan}<br>; modal.style.display = 'block'; }
+function mostrarModal(match){ detalleP.innerHTML = <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br> Liga: ${match.league.name}<br> Fecha: ${match.fixture.date}<br> Estadio: ${match.fixture.venue.name || 'N/A'}<br> Ciudad: ${match.fixture.venue.city || 'N/A'}<br> Ambos anotan: ${match.ambosAnotan}<br> +1.5 goles: ${match.mas15}<br> +2.5 goles: ${match.mas25}<br>; modal.style.display = 'block'; }
 
 function cerrarModal(){ modal.style.display = 'none'; }
 
