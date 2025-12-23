@@ -1,40 +1,41 @@
-const tableBody=document.querySelector('#matches-table tbody');
-const leagueSelect=document.getElementById('league-select');
-const modal=document.getElementById('prediction-modal');
-const ctx=document.getElementById('ev-chart').getContext('2d');
+const tablaBody = document.querySelector('#tabla-partidos tbody');
+const ligaSelect = document.getElementById('liga-select');
+const modal = document.getElementById('modal-partido');
+const ctx = document.getElementById('ev-chart').getContext('2d');
 let evChart;
 
-leagueSelect.addEventListener('change',()=>loadMatches(leagueSelect.value));
+ligaSelect.addEventListener('change', () => cargarPartidos(ligaSelect.value));
 
-tableBody.addEventListener('click',async(e)=>{
-    const row=e.target.closest('tr');
-    if(!row)return;
-    const matchId=row.dataset.matchid;
-    const res=await fetch(`/api/predictions/${matchId}`);
-    const match=await res.json();
-    modal.innerHTML=`
-<h2>${match.home} vs ${match.away}</h2>
-<p>prob home: ${(match.probabilityhome*100).toFixed(1)}%</p>
-<p>prob draw: ${(match.probabilitydraw*100).toFixed(1)}%</p>
-<p>prob away: ${(match.probabilityaway*100).toFixed(1)}%</p>
-<p>ev home: ${match.evhome.toFixed(2)}</p>
-<p>ev draw: ${match.evdraw.toFixed(2)}</p>
-<p>ev away: ${match.evaway.toFixed(2)}</p>
+tablaBody.addEventListener('click', async (e) => {
+    const row = e.target.closest('tr');
+    if (!row) return;
+    const id = row.dataset.idpartido;
+    const res = await fetch(`/api/predictions/${id}`);
+    const partido = await res.json();
+
+    modal.innerHTML = `
+<h2>${partido.local} vs ${partido.visitante}</h2>
+<p>Prob. local: ${(partido.probabilidad_local*100).toFixed(1)}%</p>
+<p>Prob. empate: ${(partido.probabilidad_empate*100).toFixed(1)}%</p>
+<p>Prob. visitante: ${(partido.probabilidad_visitante*100).toFixed(1)}%</p>
+<p>EV local: ${partido.ev_local.toFixed(2)}</p>
+<p>EV empate: ${partido.ev_empate.toFixed(2)}</p>
+<p>EV visitante: ${partido.ev_visitante.toFixed(2)}</p>
 <hr>
-<p>btts (ambos anotan): ${match.btts}</p>
-<p>goles más/menos 2.5: ${match.goles25}</p>
-<p>goles más/menos 1.5: ${match.goles15}</p>
+<p>BTTS (ambos anotan): ${partido.btts}</p>
+<p>Goles más/menos 2.5: ${partido.goles25}</p>
+<p>Goles más/menos 1.5: ${partido.goles15}</p>
 `;
-    modal.style.display='block';
+    modal.style.display = 'block';
 
     if(evChart) evChart.destroy();
-    evChart=new Chart(ctx,{
+    evChart = new Chart(ctx,{
         type:'bar',
         data:{
-            labels:[match.home,'empate',match.away],
+            labels:[partido.local,'Empate',partido.visitante],
             datasets:[{
                 label:'EV',
-                data:[match.evhome,match.evdraw,match.evaway],
+                data:[partido.ev_local,partido.ev_empate,partido.ev_visitante],
                 backgroundColor:['#4caf50','#ffc107','#f44336']
             }]
         },
@@ -42,33 +43,33 @@ tableBody.addEventListener('click',async(e)=>{
     });
 });
 
-async function loadMatches(filterLeague='all'){
-    const res=await fetch('/api/predictions');
-    let matches=await res.json();
-    if(filterLeague!=='all') matches=matches.filter(m=>m.league==filterLeague);
+async function cargarPartidos(filtro='todas'){
+    const res = await fetch('/api/predictions');
+    let partidos = await res.json();
+    if(filtro !== 'todas') partidos = partidos.filter(p => p.liga === filtro);
 
-    tableBody.innerHTML='';
-    matches.forEach(match=>{
-        const row=document.createElement('tr');
-        row.dataset.matchid=match.matchid;
-        row.innerHTML=`
-<td>${new Date(match.date).toLocaleString()}</td>
-<td>${match.home} vs ${match.away}</td>
-<td>${(match.probabilityhome*100).toFixed(1)}%</td>
-<td>${(match.probabilitydraw*100).toFixed(1)}%</td>
-<td>${(match.probabilityaway*100).toFixed(1)}%</td>
-<td>${match.oddshome.toFixed(2)}</td>
-<td>${match.oddsdraw.toFixed(2)}</td>
-<td>${match.oddsaway.toFixed(2)}</td>
-<td class="${match.evhome>0?'ev-positive':'ev-negative'}">${match.evhome.toFixed(2)}</td>
-<td class="${match.evdraw>0?'ev-positive':'ev-negative'}">${match.evdraw.toFixed(2)}</td>
-<td class="${match.evaway>0?'ev-positive':'ev-negative'}">${match.evaway.toFixed(2)}</td>
-<td>${match.btts}</td>
-<td>${match.goles25}</td>
-<td>${match.goles15}</td>
+    tablaBody.innerHTML = '';
+    partidos.forEach(p => {
+        const row = document.createElement('tr');
+        row.dataset.idpartido = p.idpartido;
+        row.innerHTML = `
+<td>${new Date(p.fecha).toLocaleString()}</td>
+<td>${p.local} vs ${p.visitante}</td>
+<td>${(p.probabilidad_local*100).toFixed(1)}%</td>
+<td>${(p.probabilidad_empate*100).toFixed(1)}%</td>
+<td>${(p.probabilidad_visitante*100).toFixed(1)}%</td>
+<td>${p.cuotas_local.toFixed(2)}</td>
+<td>${p.cuotas_empate.toFixed(2)}</td>
+<td>${p.cuotas_visitante.toFixed(2)}</td>
+<td class="${p.ev_local>0?'positivo':'negativo'}">${p.ev_local.toFixed(2)}</td>
+<td class="${p.ev_empate>0?'positivo':'negativo'}">${p.ev_empate.toFixed(2)}</td>
+<td class="${p.ev_visitante>0?'positivo':'negativo'}">${p.ev_visitante.toFixed(2)}</td>
+<td>${p.btts}</td>
+<td>${p.goles25}</td>
+<td>${p.goles15}</td>
 `;
-        tableBody.appendChild(row);
+        tablaBody.appendChild(row);
     });
 }
 
-loadMatches();
+cargarPartidos();
