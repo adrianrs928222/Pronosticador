@@ -1,4 +1,4 @@
-function calculateEV(probability, odds){
-    return (probability * odds) - 1;
+function calculateEV(probabilidad, cuotas){
+    return (probabilidad * cuotas) - 1;
 }
 module.exports = calculateEV;
